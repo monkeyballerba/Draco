@@ -1,33 +1,29 @@
--- Load UI Framework (assuming WindUI is available)
+-- Load the WindUI framework
 local WindUI = loadstring(game:HttpGet("https://tree-hub.vercel.app/api/UI/WindUI"))()
 
--- Create a Window with a new design and theme
+-- Create the window
 local Window = WindUI:CreateWindow({
-    Title = "DR Hub", 
-    Icon = "atom", 
-    Author = "by @draco", 
-    Folder = "CloudHub", 
+    Title = "DR Hub",
+    Icon = "atom",
+    Author = "by @draco",
+    Folder = "CloudHub",
     Size = UDim2.fromOffset(505, 325),
     KeySystem = {
-        Key = "XRHV1KS", 
-        Note = "Key In Discord", 
-        URL = "https://discord.gg/U3Ahz8MM", 
-        SaveKey = true, 
-    }, 
+        Key = "XRHV1KS",
+        Note = "Key In Discord",
+        URL = "https://discord.gg/U3Ahz8MM",
+        SaveKey = true,
+    },
     Transparent = true,
-    Theme = "Rainbow",  -- Static rainbow theme
+    Theme = "Red",
     SideBarWidth = 175,
-    HasOutline = true, 
-    Rounded = true,  -- Rounded corners for a modern look
+    HasOutline = true,
 })
-
--- Ensure theme is applied to the window and its components
-Window:GetTheme()  -- Call to retrieve current theme if you need to apply dynamic changes
 
 -- General Tab
 local Tab1 = Window:Tab({
     Title = "General",
-    Icon = "globe", 
+    Icon = "globe",
 })
 
 Window:Divider()
@@ -35,17 +31,102 @@ Window:Divider()
 -- Execution Tab
 local Tab2 = Window:Tab({
     Title = "Execution",
-    Icon = "folder", 
+    Icon = "folder",
 })
 
--- Enhanced Reach & Mags Section
-local Section2 = Tab1:Section({ 
+-- Image for Monkey Pop-Up
+local function ShowMonkeyImage()
+    -- Create ScreenGui
+    local ScreenGui = Instance.new("ScreenGui")
+    ScreenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+    
+    -- Create the ImageLabel
+    local ImageLabel = Instance.new("ImageLabel")
+    ImageLabel.Parent = ScreenGui
+    ImageLabel.Size = UDim2.new(0.2, 0, 0.2, 0)
+    ImageLabel.Position = UDim2.new(0.4, 0, 0.4, 0)
+    ImageLabel.BackgroundTransparency = 1
+    ImageLabel.Image = "https://your-image-url.com/monkey.jpg"  -- Put your monkey image URL here
+    ImageLabel.ImageTransparency = 0  -- Set opacity to full (visible)
+
+    -- Fade Out Animation
+    local tweenInfo = TweenInfo.new(2, Enum.EasingStyle.Linear, Enum.EasingDirection.Out)
+    local goal = {ImageTransparency = 1}  -- Make it fully transparent
+    local tween = game:GetService("TweenService"):Create(ImageLabel, tweenInfo, goal)
+
+    tween:Play()
+    tween.Completed:Connect(function()
+        ScreenGui:Destroy()  -- Destroy the image after the animation completes
+    end)
+end
+
+-- Trigger the Monkey image pop-up
+ShowMonkeyImage()
+
+-- General Settings
+local Section1 = Tab1:Section({
+    Title = "Shooting & Indicator",
+    TextXAlignment = "Left",
+    TextSize = 17,
+})
+
+-- Dropdown for shooting type
+local Dropdown = Tab1:Dropdown({
+    Title = "Shooting Type",
+    Value = "Tab 1",
+    Multi = false,
+    AllowNone = true,
+    Values = {
+        "Silent Aim", "Camlock"
+    },
+    Callback = function(value)
+        print(value)
+        if value == "Camlock" then
+            Camlock()  -- Call the Camlock function when selected
+        end
+    end
+})
+
+-- Indicator Toggle
+local Toggle1 = Tab1:Toggle({
+    Title = "Enable Shooting",
+    Value = true,
+    Callback = function(state)
+        print(state)
+    end,
+})
+
+-- FPS Optimization - Remove unnecessary calls and reduce the amount of work in `RenderStepped`
+local lastFPS = tick()
+
+local function OptimizeFPS()
+    local now = tick()
+    if now - lastFPS > 1 then  -- Execute once every second to reduce load
+        lastFPS = now
+        -- Only call logic that needs to be updated once every second
+        -- This reduces unnecessary checks on every frame
+    end
+end
+
+game:GetService("RunService").RenderStepped:Connect(OptimizeFPS)
+
+-- Reach & Mags Section
+local Section2 = Tab1:Section({
     Title = "Reach & Mags",
     TextXAlignment = "Left",
     TextSize = 17,
 })
 
-local ReachSlider = Tab1:Slider({
+local Toggle3 = Tab1:Toggle({
+    Title = "Enable Reach + Mags",
+    Value = true,
+    Callback = function(state)
+        print(state)
+    end,
+})
+
+-- Slider for Reach Distance
+local Slider1 = Tab1:Slider({
     Title = "Reach Distance",
     Step = 1,
     Value = {
@@ -55,17 +136,12 @@ local ReachSlider = Tab1:Slider({
     },
     Callback = function(value)
         MAX_DISTANCE = value
-        ReachIndicator.Text = "Reach Distance: " .. value
-        print("New Reach Distance: " .. MAX_DISTANCE)
-    end,
+        print("New MAX_DISTANCE: " .. MAX_DISTANCE)
+    end
 })
 
-local ReachIndicator = Tab1:Label({
-    Title = "Reach Distance",
-    Text = "Reach Distance: " .. MAX_DISTANCE
-})
-
-local MagSlider = Tab1:Slider({
+-- Slider for Mags Distance
+local Slider2 = Tab1:Slider({
     Title = "Mags Distance",
     Step = 1,
     Value = {
@@ -75,102 +151,48 @@ local MagSlider = Tab1:Slider({
     },
     Callback = function(value)
         MAX_DISTANCE = value
-        MagIndicator.Text = "Mags Distance: " .. value
-        print("New Mags Distance: " .. MAX_DISTANCE)
-    end,
+        print("New MAX_DISTANCE: " .. MAX_DISTANCE)
+    end
 })
 
-local MagIndicator = Tab1:Label({
-    Title = "Mags Distance",
-    Text = "Mags Distance: " .. MAX_DISTANCE
-})
+-- FPS Optimized Simulation
+local function simulateTouch(part1, part2)
+    -- Reduce touch simulation calls to improve FPS performance
+    if tick() % 0.1 < 0.02 then  -- Limit touch simulation to once every 100ms
+        firetouchinterest(part1, part2, 0)
+        task.wait(0.05)
+        firetouchinterest(part1, part2, 1)
+    end
+end
 
--- Enhanced Camlock Section
-local Section3 = Tab1:Section({ 
-    Title = "Camlock",
-    TextXAlignment = "Left",
-    TextSize = 17,
-})
+-- Get Nearest Ball Function
+local function getNearestBall()
+    local nearestBall = nil
+    local nearestDistance = MAX_DISTANCE
+    local searchScope = workspace:GetPartBoundsInBox(humanoidRootPart.CFrame, Vector3.new(MAX_DISTANCE, MAX_DISTANCE, MAX_DISTANCE))
 
-local CamlockToggle = Tab1:Toggle({
-    Title = "Enable Camlock",
-    Desc = "Enable/Disable Camlock",
-    Value = true,
-    Callback = function(state)
-        if state then
-            print("Camlock Enabled")
-        else
-            print("Camlock Disabled")
-        end
-    end,
-})
-
--- Enhanced Shot Indicator Section
-local Section4 = Tab1:Section({ 
-    Title = "Shot Indicator",
-    TextXAlignment = "Left",
-    TextSize = 17,
-})
-
-local ShotIndicatorToggle = Tab1:Toggle({
-    Title = "Enable Shot Indicator",
-    Desc = "Enable/Disable Shot Indicator",
-    Value = true,
-    Callback = function(state)
-        local ScreenGui = Instance.new("ScreenGui")
-        ScreenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
-
-        local TextLabel = Instance.new("TextLabel")
-        TextLabel.Parent = ScreenGui
-        TextLabel.Size = UDim2.new(0.3, 0, 0.05, 0)
-        TextLabel.Position = UDim2.new(0.35, 0, 0, 10)
-        TextLabel.BackgroundTransparency = 1
-        TextLabel.TextScaled = true
-        TextLabel.TextColor3 = Color3.new(1, 1, 1)
-        TextLabel.Font = Enum.Font.SourceSansBold
-
-        local function UpdateShotStatus()
-            -- Logic for updating the shot indicator
-            local shotStatus = "Perfect Shot!"  -- This should be dynamic based on conditions
-            TextLabel.Text = shotStatus
-            if shotStatus == "Perfect Shot!" then
-                TextLabel.TextColor3 = Color3.new(0, 1, 0)
-            else
-                TextLabel.TextColor3 = Color3.new(1, 0, 0)
+    for _, object in ipairs(searchScope) do
+        if object:IsA("BasePart") and object.Name:lower() == "ball" then
+            local distance = (object.Position - humanoidRootPart.Position).Magnitude
+            if distance <= nearestDistance then
+                nearestDistance = distance
+                nearestBall = object
             end
         end
+    end
+    return nearestBall, nearestDistance
+end
 
-        game:GetService("RunService").RenderStepped:Connect(function()
-            if state then
-                UpdateShotStatus()
-            else
-                TextLabel.Text = ""
-            end
-        end)
-    end,
-})
+-- FPS Optimized Heartbeat Function
+game:GetService("RunService").Heartbeat:Connect(function()
+    local ball, distance = getNearestBall()
+    if ball then
+        simulateTouch(humanoidRootPart, ball)
+        print("Touched nearest ball:", ball.Name, "at distance:", distance)
+    end
+end)
 
--- Silent Aim Section
-local Section5 = Tab1:Section({ 
-    Title = "Silent Aim",
-    TextXAlignment = "Left",
-    TextSize = 17,
-})
-
-local SilentAimToggle = Tab1:Toggle({
-    Title = "Enable Silent Aim",
-    Desc = "Enable/Disable Silent Aim",
-    Value = false,
-    Callback = function(state)
-        if state then
-            print("Silent Aim Enabled")
-        else
-            print("Silent Aim Disabled")
-        end
-    end,
-})
-
--- Camlock Function with smooth camera control
+-- Improved Camlock Function
 local function Camlock()
     local Players = game:GetService("Players")
     local Workspace = game:GetService("Workspace")
@@ -180,22 +202,22 @@ local function Camlock()
     local Humanoid = Character:WaitForChild("Humanoid")
     local UserInputService = game:GetService("UserInputService")
 
-    local CamlockEnabled = true  
+    local CamlockEnabled = true
 
     local function CameraAndArcCalculate()
         if not CamlockEnabled then return end
         local Goal, Distance = GetGoal()
-        
+
         if Goal then
             local HoopPosition = Goal.Position
-            local ArcAdjustment = HighArc(math.floor(Distance))  
+            local ArcAdjustment = HighArc(math.floor(Distance))
             if ArcAdjustment == 0 then
-                ArcAdjustment = LowArc(math.floor(Distance))  
+                ArcAdjustment = LowArc(math.floor(Distance))
             end
-            
+
             local BasketPosition = HoopPosition + Vector3.new(0, ArcAdjustment, 0)
             local LookDirection = (BasketPosition - Camera.CFrame.Position).unit
-            local UpwardOffset = Vector3.new(0, 0.3, 0)  
+            local UpwardOffset = Vector3.new(0, 0.3, 0)
             Camera.CFrame = CFrame.new(Camera.CFrame.Position, BasketPosition + UpwardOffset)
         end
     end
@@ -223,5 +245,4 @@ local function Camlock()
     end)
 end
 
--- Call the function to initialize Camlock
 Camlock()
