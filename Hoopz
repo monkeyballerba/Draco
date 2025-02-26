@@ -1,4 +1,4 @@
--- Load UI Framework (Assuming WindUI is available)
+-- Load UI Framework (assuming WindUI is available)
 local WindUI = loadstring(game:HttpGet("https://tree-hub.vercel.app/api/UI/WindUI"))()
 
 -- Create a Window with a new design and theme
@@ -20,6 +20,9 @@ local Window = WindUI:CreateWindow({
     HasOutline = true, 
     Rounded = true,  -- Rounded corners for a modern look
 })
+
+-- Ensure theme is applied to the window and its components
+Window:GetTheme()  -- Call to retrieve current theme if you need to apply dynamic changes
 
 -- General Tab
 local Tab1 = Window:Tab({
